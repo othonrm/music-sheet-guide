@@ -4,6 +4,10 @@ For now, a simple 'note guesser' app to help you learn to read music notes. It i
 
 It works by detecting played notes via a MIDI interface connected to your computer or mobile device. Users can connect their MIDI devices, and the app will display the corresponding note on the staff in real-time as they play.
 
+## Preview
+
+<img src="https://github.com/user-attachments/assets/12a77f34-e2c7-429c-9e52-352675d1698d" alt="drawing" width="200"/>
+
 ## Features
 - **MIDI Support**: Connect your MIDI device via USB or Bluetooth to play notes (BLE: TBD).
 - **Device List**: View and select available MIDI devices for connection.
