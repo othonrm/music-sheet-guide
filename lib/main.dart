@@ -52,6 +52,8 @@ class _MyHomePageState extends State<MyHomePage> {
   bool lastPressedNoteCorrect = false;
   int expectedNote = begginerTrebleClefNotes[0];
   int points = 0;
+  final GlobalKey _clefKey = GlobalKey();
+  double clefHeight = 0;
 
   @override
   void initState() {
@@ -125,9 +127,24 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   Widget build(BuildContext context) {
-    // int topMargin = 4; // Margin for the top of the treble clef image
-    int bottomMargin = 10;
-    double noteSpacing = 37.2; // Spacing between notes in pixels
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      // Safe to access context and measure widgets here
+      final renderBox =
+          _clefKey.currentContext?.findRenderObject() as RenderBox?;
+      if (renderBox != null) {
+        final size = renderBox.size;
+        setState(() {
+          clefHeight = size.height;
+        });
+      }
+    });
+
+    // int topMargin = 4;
+    double bottomMargin = (10 / 313) * clefHeight;
+    double fullClefHeight = 313;
+    double noteHeight = 38;
+    double noteHeightProportion = noteHeight / fullClefHeight;
+    double noteSpacing = noteHeightProportion * clefHeight;
 
     int trebleClefStart = 60;
 
@@ -153,7 +170,10 @@ class _MyHomePageState extends State<MyHomePage> {
 
     return CupertinoPageScaffold(
       navigationBar: CupertinoNavigationBar(
-        middle: Text(widget.title),
+        middle: Text(
+          widget.title,
+          textAlign: TextAlign.center,
+        ),
       ),
       child: SafeArea(
         child: Center(
@@ -184,15 +204,22 @@ class _MyHomePageState extends State<MyHomePage> {
               Stack(
                 alignment: Alignment.center,
                 children: [
-                  Image.asset(
-                    'assets/images/treble-clef.jpg',
+                  Container(
+                    key: _clefKey,
+                    child: Image.asset(
+                      'assets/images/treble-clef.jpg',
+                      fit: BoxFit.contain,
+                    ),
                   ),
                   Positioned(
                     // top: 4 + (37.2 * 7),
                     bottom: bottomPosition,
                     child: Padding(
                         padding: const EdgeInsets.fromLTRB(16, 0, 0, 0),
-                        child: Image.asset('assets/images/whole-note.png')),
+                        child: Image.asset(
+                          'assets/images/whole-note.png',
+                          height: noteSpacing,
+                        )),
                   ),
                 ],
               ),
@@ -208,7 +235,6 @@ class _MyHomePageState extends State<MyHomePage> {
                     FutureBuilder<List<MidiDevice>>(
                       future: devices,
                       builder: (context, snapshot) {
-                        print(snapshot);
                         if (snapshot.connectionState ==
                                 ConnectionState.waiting ||
                             snapshot.connectionState == ConnectionState.none) {
@@ -217,7 +243,10 @@ class _MyHomePageState extends State<MyHomePage> {
                           return Text('Error: ${snapshot.error}');
                         } else if (!snapshot.hasData ||
                             snapshot.data!.isEmpty) {
-                          return const Text('No MIDI devices found.');
+                          return const Text(
+                            'No MIDI devices found.',
+                            textAlign: TextAlign.center,
+                          );
                         } else {
                           return Column(
                             mainAxisAlignment: MainAxisAlignment.center,
