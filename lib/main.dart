@@ -127,6 +127,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   Widget build(BuildContext context) {
+    // TODO: not the best place to put, also should use LayoutBuilder
     WidgetsBinding.instance.addPostFrameCallback((_) {
       // Safe to access context and measure widgets here
       final renderBox =
@@ -254,11 +255,8 @@ class _MyHomePageState extends State<MyHomePage> {
                             children: snapshot.data!
                                 .map((device) => Padding(
                                       padding: const EdgeInsets.all(8.0),
-                                      child: Row(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.center,
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.center,
+                                      child: Wrap(
+                                          alignment: WrapAlignment.center,
                                           children: [
                                             Text(
                                               'Device: ${device.name}, ID: ${device.id}',
@@ -281,6 +279,7 @@ class _MyHomePageState extends State<MyHomePage> {
                                                     print(
                                                         'Error connecting to device: $e');
                                                   }
+                                                  refreshDevices();
                                                 },
                                                 child: const Text('Connect'),
                                               ),
