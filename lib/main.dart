@@ -51,6 +51,7 @@ class _MyHomePageState extends State<MyHomePage> {
   int lastPressedNote = -1;
   bool lastPressedNoteCorrect = false;
   int expectedNote = begginerTrebleClefNotes[0];
+  int points = 0;
 
   @override
   void initState() {
@@ -82,6 +83,7 @@ class _MyHomePageState extends State<MyHomePage> {
             print(lastPressedNote % 12);
 
             if (lastPressedNote == expectedNote) {
+              points++;
               print('Correct note pressed: $noteName');
               lastPressedNoteCorrect = true;
               int min = 0;
@@ -94,6 +96,7 @@ class _MyHomePageState extends State<MyHomePage> {
               print(
                   'Incorrect note pressed: $noteName, expected: ${midiNoteNames[expectedNote]}');
               lastPressedNoteCorrect = false;
+              points = max(0, points - 1);
             }
           });
         } else if (event.data[0] == 128) {
@@ -157,11 +160,19 @@ class _MyHomePageState extends State<MyHomePage> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.start,
             children: <Widget>[
-              SizedBox(height: 20),
-              Text('Expected Note: $expectedNote'),
-              SizedBox(height: 20),
+              // SizedBox(height: 20),
+              // Text('Expected Note: $expectedNote'),
+              const SizedBox(height: 20),
               Text(
-                'Last Pressed Note: ${(lastPressedNote != -1) ? lastPressedNote : '-'}',
+                'Points: $points',
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              SizedBox(height: 8),
+              Text(
+                'Last Pressed Note: ${(lastPressedNote != -1) ? '${midiNoteNames[lastPressedNote].toString().substring(0, 1)} / ${angloSaxonToLatin[midiNoteNames[lastPressedNote].toString().substring(0, 1)]}' : '-'}',
                 style: TextStyle(
                     color: (lastPressedNote == -1)
                         ? CupertinoColors.systemGrey

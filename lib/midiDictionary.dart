@@ -148,3 +148,14 @@ const List<int> begginerBassClefNotes = [
   57, // A3
   59, // B3
 ];
+
+// Anglo-Saxon to Latin note names
+const Map<String, String> angloSaxonToLatin = {
+  'C': 'Do',
+  'D': 'Re',
+  'E': 'Mi',
+  'F': 'Fa',
+  'G': 'Sol',
+  'A': 'La',
+  'B': 'Si',
+};
