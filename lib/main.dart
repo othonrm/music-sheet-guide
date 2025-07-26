@@ -310,16 +310,27 @@ class _MyHomePageState extends State<MyHomePage> {
                     ),
                   ],
                 ),
-                Padding(
-                  padding: EdgeInsets.only(top: 16),
-                  child: Text(
-                    'To use this app, make sure you have a MIDI device connected to your computer or mobile device. The app will automatically detect and list the available MIDI devices. You can then connect to a device by clicking the "Connect" button next to it.',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: CupertinoColors.systemGrey,
+                Column(
+                  children: [
+                    const SizedBox(height: 16),
+                    CupertinoButton.filled(
+                      sizeStyle: CupertinoButtonSize.small,
+                      onPressed: refreshDevices,
+                      child: const Text('Refresh Devices'),
                     ),
-                    textAlign: TextAlign.center,
-                  ),
+                    const SizedBox(height: 8),
+                    Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Text(
+                        'To use this app, make sure you have a MIDI device connected to your computer or mobile device. The app will automatically detect and list the available MIDI devices. You can then connect to a device by clicking the "Connect" button next to it.',
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: CupertinoColors.systemGrey,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
