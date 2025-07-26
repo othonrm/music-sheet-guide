@@ -129,7 +129,6 @@ class _MyHomePageState extends State<MyHomePage> {
   Widget build(BuildContext context) {
     // TODO: not the best place to put, also should use LayoutBuilder
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      // Safe to access context and measure widgets here
       final renderBox =
           _clefKey.currentContext?.findRenderObject() as RenderBox?;
       if (renderBox != null) {
@@ -151,7 +150,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
     // expectedNote = 61;
 
-    double blackAdjuster = 0; // Counter for black notes
+    double blackAdjuster = 0;
 
     // Positioning Tester
     // expectedNote = begginerTrebleClefNotes[0];
@@ -177,135 +176,153 @@ class _MyHomePageState extends State<MyHomePage> {
         ),
       ),
       child: SafeArea(
-        child: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.start,
-            children: <Widget>[
-              // SizedBox(height: 20),
-              // Text('Expected Note: $expectedNote'),
-              const SizedBox(height: 20),
-              Text(
-                'Points: $points',
-                style: const TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              SizedBox(height: 8),
-              Text(
-                'Last Pressed Note: ${(lastPressedNote != -1) ? '${midiNoteNames[lastPressedNote].toString().substring(0, 1)} / ${angloSaxonToLatin[midiNoteNames[lastPressedNote].toString().substring(0, 1)]}' : '-'}',
-                style: TextStyle(
-                    color: (lastPressedNote == -1)
-                        ? CupertinoColors.systemGrey
-                        : (lastPressedNoteCorrect
-                            ? CupertinoColors.systemGreen
-                            : CupertinoColors.systemRed),
-                    fontSize: 16),
-              ),
-              Stack(
-                alignment: Alignment.center,
-                children: [
-                  Container(
-                    key: _clefKey,
-                    child: Image.asset(
-                      'assets/images/treble-clef.jpg',
-                      fit: BoxFit.contain,
-                    ),
-                  ),
-                  Positioned(
-                    // top: 4 + (37.2 * 7),
-                    bottom: bottomPosition,
-                    child: Padding(
-                        padding: const EdgeInsets.fromLTRB(16, 0, 0, 0),
-                        child: Image.asset(
-                          'assets/images/whole-note.png',
-                          height: noteSpacing,
-                        )),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 20),
-              const Text(
-                'List of MIDI devices:',
-              ),
-              Expanded(
-                child: ListView(
-                  shrinkWrap: true,
-                  padding: const EdgeInsets.all(16.0),
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(8.0),
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              minHeight: MediaQuery.of(context).size.height -
+                  MediaQuery.of(context).padding.top -
+                  kToolbarHeight,
+            ),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Column(
                   children: [
-                    FutureBuilder<List<MidiDevice>>(
-                      future: devices,
-                      builder: (context, snapshot) {
-                        if (snapshot.connectionState ==
-                                ConnectionState.waiting ||
-                            snapshot.connectionState == ConnectionState.none) {
-                          return const CupertinoActivityIndicator();
-                        } else if (snapshot.hasError) {
-                          return Text('Error: ${snapshot.error}');
-                        } else if (!snapshot.hasData ||
-                            snapshot.data!.isEmpty) {
-                          return const Text(
-                            'No MIDI devices found.',
-                            textAlign: TextAlign.center,
-                          );
-                        } else {
-                          return Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            children: snapshot.data!
-                                .map((device) => Padding(
-                                      padding: const EdgeInsets.all(8.0),
-                                      child: Wrap(
-                                          alignment: WrapAlignment.center,
-                                          children: [
-                                            Text(
-                                              'Device: ${device.name}, ID: ${device.id}',
-                                              style:
-                                                  const TextStyle(fontSize: 16),
-                                            ),
-                                            const SizedBox(width: 10),
-                                            if (device.connected)
-                                              Text('Connected')
-                                            else
-                                              ElevatedButton(
-                                                onPressed: () async {
-                                                  try {
-                                                    await MidiCommand()
-                                                        .connectToDevice(
-                                                            device);
-                                                    print(
-                                                        'Connected to ${device.name}');
-                                                  } catch (e) {
-                                                    print(
-                                                        'Error connecting to device: $e');
-                                                  }
-                                                  refreshDevices();
-                                                },
-                                                child: const Text('Connect'),
-                                              ),
-                                          ]),
-                                    ))
-                                .toList(),
-                          );
-                        }
-                      },
+                    Text(
+                      'Points: $points',
+                      style: const TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
-                    const SizedBox(height: 20),
-                    CupertinoButton(
-                      onPressed: refreshDevices,
-                      child: const Text('Refresh Devices'),
+                    SizedBox(height: 8),
+                    Text(
+                      'Last Pressed Note: ${(lastPressedNote != -1) ? '${midiNoteNames[lastPressedNote].toString().substring(0, 1)} / ${angloSaxonToLatin[midiNoteNames[lastPressedNote].toString().substring(0, 1)]}' : '-'}',
+                      style: TextStyle(
+                          color: (lastPressedNote == -1)
+                              ? CupertinoColors.systemGrey
+                              : (lastPressedNoteCorrect
+                                  ? CupertinoColors.systemGreen
+                                  : CupertinoColors.systemRed),
+                          fontSize: 16),
+                    ),
+                    Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        Container(
+                          key: _clefKey,
+                          child: Image.asset(
+                            'assets/images/treble-clef.jpg',
+                            fit: BoxFit.contain,
+                          ),
+                        ),
+                        Positioned(
+                          // top: 4 + (37.2 * 7),
+                          bottom: bottomPosition,
+                          child: Padding(
+                              padding: const EdgeInsets.fromLTRB(16, 0, 0, 0),
+                              child: Image.asset(
+                                'assets/images/whole-note.png',
+                                height: noteSpacing,
+                              )),
+                        ),
+                      ],
                     ),
                     const SizedBox(height: 20),
                     const Text(
-                      'To use this app, make sure you have a MIDI device connected to your computer or mobile device. The app will automatically detect and list the available MIDI devices. You can then connect to a device by clicking the "Connect" button next to it.',
-                      style: TextStyle(
-                          fontSize: 14, color: CupertinoColors.systemGrey),
+                      'List of MIDI devices:',
+                    ),
+                    ListView(
+                      shrinkWrap: true,
+                      children: [
+                        FutureBuilder<List<MidiDevice>>(
+                          future: devices,
+                          builder: (context, snapshot) {
+                            if (snapshot.connectionState ==
+                                    ConnectionState.waiting ||
+                                snapshot.connectionState ==
+                                    ConnectionState.none) {
+                              return const CupertinoActivityIndicator();
+                            } else if (snapshot.hasError) {
+                              return Text('Error: ${snapshot.error}');
+                            } else if (!snapshot.hasData ||
+                                snapshot.data!.isEmpty) {
+                              return const Text(
+                                'No MIDI devices found.',
+                                textAlign: TextAlign.center,
+                              );
+                            } else {
+                              return Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                children: snapshot.data!
+                                    .where((device) => !device.name
+                                        .toLowerCase()
+                                        .contains("network"))
+                                    .map((device) => Padding(
+                                          padding: const EdgeInsets.all(8.0),
+                                          child: Column(
+                                            children: [
+                                              Wrap(
+                                                  alignment:
+                                                      WrapAlignment.center,
+                                                  children: [
+                                                    Text(
+                                                      'Device: ${device.name}, ID: ${device.id}',
+                                                      textAlign:
+                                                          TextAlign.center,
+                                                      style: const TextStyle(
+                                                          fontSize: 16),
+                                                    ),
+                                                  ]),
+                                              const SizedBox(height: 8),
+                                              if (device.connected)
+                                                Text('Connected')
+                                              else
+                                                CupertinoButton.tinted(
+                                                  sizeStyle:
+                                                      CupertinoButtonSize.small,
+                                                  onPressed: () async {
+                                                    try {
+                                                      await MidiCommand()
+                                                          .connectToDevice(
+                                                              device);
+                                                      print(
+                                                          'Connected to ${device.name}');
+                                                    } catch (e) {
+                                                      print(
+                                                          'Error connecting to device: $e');
+                                                    }
+                                                    refreshDevices();
+                                                  },
+                                                  child: const Text('Connect'),
+                                                )
+                                            ],
+                                          ),
+                                        ))
+                                    .toList(),
+                              );
+                            }
+                          },
+                        ),
+                      ],
                     ),
                   ],
                 ),
-              ),
-              const SizedBox(height: 20),
-            ],
+                Padding(
+                  padding: EdgeInsets.only(top: 16),
+                  child: Text(
+                    'To use this app, make sure you have a MIDI device connected to your computer or mobile device. The app will automatically detect and list the available MIDI devices. You can then connect to a device by clicking the "Connect" button next to it.',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: CupertinoColors.systemGrey,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
