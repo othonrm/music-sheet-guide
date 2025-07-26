@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_midi_command/flutter_midi_command.dart';
 import 'package:music_sheet_guide/midiDictionary.dart';
+import 'dart:math';
 
 void main() {
   runApp(const MusicSheetGuideApp());
@@ -30,7 +31,7 @@ class MusicSheetGuideApp extends StatelessWidget {
           ),
         ),
       ),
-      home: const MyHomePage(title: 'Music Sheet Guide'),
+      home: const MyHomePage(title: 'Music Sheet Guide - Note Guesser'),
     );
   }
 }
@@ -48,6 +49,7 @@ class _MyHomePageState extends State<MyHomePage> {
   Future<List<MidiDevice>>? devices;
 
   int lastPressedNote = -1;
+  bool lastPressedNoteCorrect = false;
   int expectedNote = begginerTrebleClefNotes[0];
 
   @override
@@ -75,6 +77,25 @@ class _MyHomePageState extends State<MyHomePage> {
 
         if (event.data[0] == 144) {
           print('Note On: $noteName (${event.data[1]})');
+          setState(() {
+            lastPressedNote = noteCode;
+            print(lastPressedNote % 12);
+
+            if (lastPressedNote == expectedNote) {
+              print('Correct note pressed: $noteName');
+              lastPressedNoteCorrect = true;
+              int min = 0;
+              int max = begginerTrebleClefNotes.length - 1;
+              int randomNoteIndex = min + Random().nextInt(max - min);
+              print('Random note index: $randomNoteIndex');
+              print('Note: ${begginerTrebleClefNotes[randomNoteIndex]}');
+              expectedNote = begginerTrebleClefNotes[randomNoteIndex];
+            } else {
+              print(
+                  'Incorrect note pressed: $noteName, expected: ${midiNoteNames[expectedNote]}');
+              lastPressedNoteCorrect = false;
+            }
+          });
         } else if (event.data[0] == 128) {
           print('Note Off: $noteName');
         }
@@ -101,10 +122,31 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   Widget build(BuildContext context) {
-    int topMargin = 4; // Margin for the top of the treble clef image
+    // int topMargin = 4; // Margin for the top of the treble clef image
+    int bottomMargin = 10;
     double noteSpacing = 37.2; // Spacing between notes in pixels
 
     int trebleClefStart = 60;
+
+    // expectedNote = 61;
+
+    double blackAdjuster = 0; // Counter for black notes
+
+    // Positioning Tester
+    // expectedNote = begginerTrebleClefNotes[0];
+
+    if ((expectedNote % 12) % 2 == 0) {
+      blackAdjuster = expectedNote % 12 / 2;
+    } else if ((expectedNote % 12) % 2 == 1) {
+      blackAdjuster = (expectedNote % 12 / 2) - 0.5;
+    } else {
+      blackAdjuster = 0;
+    }
+
+    // Calculate the position of the expected note
+    double bottomPosition = (bottomMargin + (noteSpacing / 2)) +
+        ((noteSpacing / 2) *
+            ((expectedNote - trebleClefStart) - blackAdjuster));
 
     return CupertinoPageScaffold(
       navigationBar: CupertinoNavigationBar(
@@ -119,7 +161,15 @@ class _MyHomePageState extends State<MyHomePage> {
               Text('Expected Note: $expectedNote'),
               SizedBox(height: 20),
               Text(
-                  'Last Pressed Note: ${(lastPressedNote != -1) ? lastPressedNote : '-'}'),
+                'Last Pressed Note: ${(lastPressedNote != -1) ? lastPressedNote : '-'}',
+                style: TextStyle(
+                    color: (lastPressedNote == -1)
+                        ? CupertinoColors.systemGrey
+                        : (lastPressedNoteCorrect
+                            ? CupertinoColors.systemGreen
+                            : CupertinoColors.systemRed),
+                    fontSize: 16),
+              ),
               Stack(
                 alignment: Alignment.center,
                 children: [
@@ -127,7 +177,8 @@ class _MyHomePageState extends State<MyHomePage> {
                     'assets/images/treble-clef.jpg',
                   ),
                   Positioned(
-                    top: 4 + (37.2 * 6.5),
+                    // top: 4 + (37.2 * 7),
+                    bottom: bottomPosition,
                     child: Padding(
                         padding: const EdgeInsets.fromLTRB(16, 0, 0, 0),
                         child: Image.asset('assets/images/whole-note.png')),
