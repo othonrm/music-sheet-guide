@@ -1,5 +1,7 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_midi_command/flutter_midi_command.dart';
+import 'package:music_sheet_guide/midiDictionary.dart';
 
 void main() {
   runApp(const MyApp());
@@ -58,48 +60,65 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   int _counter = 0;
 
-  // initialization of MIDI devices
+  Future<List<MidiDevice>> devices = Future<List<MidiDevice>>(() async {
+    try {
+      // Fetch the list of MIDI devices
+      List<MidiDevice> devices = await (MidiCommand().devices) ?? [];
+      return devices;
+    } catch (e) {
+      print('Error fetching MIDI devices: $e');
+      return [];
+    }
+  });
+
   @override
   void initState() {
-    print("Initializing MIDI devices...");
-
     super.initState();
-    // Initialize MIDI devices when the state is created
-    MidiCommand().devices.then((devices) {
-      if (devices == null || devices.isEmpty) {
-        print('No MIDI devices found.');
-        return;
+
+    print('Initializing App...');
+
+    MidiCommand().onMidiSetupChanged?.listen((event) {
+      print('MIDI setup changed: ${event}');
+    });
+
+    bool isConnected = false;
+
+    MidiCommand().onMidiDataReceived?.listen((event) {
+      // print('MIDI data received from: ${event.device.name}');
+      // print('Data: ${event.data}');
+
+      if (event.data[0] == 254) {
+        // This is a MIDI active sensing message
+        print('Active sensing received from ${event.device.name}');
+      } else {
+        // Handle other MIDI messages
+        print('MIDI message: ${event.data}');
       }
-      print('Available MIDI devices:');
-      for (var device in devices) {
-        print('Device: ${device.name}, ID: ${device.id}');
+
+      if (event.data.length > 1) {
+        int noteCode = event.data[1];
+        String noteName = midiNoteNames[noteCode];
+
+        if (event.data[0] == 144) {
+          print('Note On: $noteName (${event.data[2]})');
+        } else if (event.data[0] == 128) {
+          print('Note Off: $noteName');
+        }
       }
-    }).catchError((error) {
-      print('Error fetching MIDI devices: $error');
     });
   }
 
-  void _incrementCounter() {
+  void refreshDevices() {
     setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
-      _counter++;
-      print('Counter incremented: $_counter');
-
-      MidiCommand().devices.then((devices) {
-        if (devices == null || devices.isEmpty) {
-          print('No MIDI devices found.');
-          return;
+      devices = Future<List<MidiDevice>>(() async {
+        try {
+          // Fetch the list of MIDI devices
+          List<MidiDevice> devices = await (MidiCommand().devices) ?? [];
+          return devices;
+        } catch (e) {
+          print('Error fetching MIDI devices: $e');
+          return [];
         }
-        print('Available MIDI devices:');
-        for (var device in devices) {
-          print('Device: ${device.name}, ID: ${device.id}');
-        }
-      }).catchError((error) {
-        print('Error fetching MIDI devices: $error');
       });
     });
   }
@@ -142,19 +161,62 @@ class _MyHomePageState extends State<MyHomePage> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
             const Text(
-              'You have pushed the button this many times:',
+              'List of MIDI devices:',
             ),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headlineMedium,
+            ListView(
+              shrinkWrap: true,
+              children: [
+                FutureBuilder<List<MidiDevice>>(
+                  future: devices,
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return const CircularProgressIndicator();
+                    } else if (snapshot.hasError) {
+                      return Text('Error: ${snapshot.error}');
+                    } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                      return const Text('No MIDI devices found.');
+                    } else {
+                      return Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: snapshot.data!
+                            .map((device) =>
+                                // Text(
+                                // 'Device: ${device.name}, ID: ${device.id}'))
+                                Row(children: [
+                                  Text(
+                                    'Device: ${device.name}, ID: ${device.id}',
+                                    style: const TextStyle(fontSize: 16),
+                                  ),
+                                  const SizedBox(width: 10),
+                                  ElevatedButton(
+                                    onPressed: () async {
+                                      try {
+                                        await MidiCommand()
+                                            .connectToDevice(device);
+                                        print('Connected to ${device.name}');
+                                      } catch (e) {
+                                        print('Error connecting to device: $e');
+                                      }
+                                    },
+                                    child: const Text('Connect'),
+                                  ),
+                                ]))
+                            .toList(),
+                      );
+                    }
+                  },
+                ),
+              ],
             ),
+            const SizedBox(height: 20),
           ],
         ),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
+        onPressed: refreshDevices,
+        tooltip: 'Refresh',
+        child: const Icon(CupertinoIcons.arrow_counterclockwise),
       ), // This trailing comma makes auto-formatting nicer for build methods.
     );
   }
