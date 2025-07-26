@@ -128,3 +128,23 @@ const List<String> midiNoteNames = [
   'F#9',
   'G9'
 ];
+
+const List<int> begginerTrebleClefNotes = [
+  60, // C4
+  62, // D4
+  64, // E4
+  65, // F4
+  67, // G4
+  69, // A4
+  71, // B4
+];
+
+const List<int> begginerBassClefNotes = [
+  48, // C3
+  50, // D3
+  52, // E3
+  53, // F3
+  55, // G3
+  57, // A3
+  59, // B3
+];

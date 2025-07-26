@@ -47,6 +47,9 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   Future<List<MidiDevice>>? devices;
 
+  int lastPressedNote = -1;
+  int expectedNote = begginerTrebleClefNotes[0];
+
   @override
   void initState() {
     super.initState();
@@ -71,7 +74,7 @@ class _MyHomePageState extends State<MyHomePage> {
         String noteName = midiNoteNames[noteCode];
 
         if (event.data[0] == 144) {
-          print('Note On: $noteName (${event.data[2]})');
+          print('Note On: $noteName (${event.data[1]})');
         } else if (event.data[0] == 128) {
           print('Note Off: $noteName');
         }
@@ -98,6 +101,11 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   Widget build(BuildContext context) {
+    int topMargin = 4; // Margin for the top of the treble clef image
+    double noteSpacing = 37.2; // Spacing between notes in pixels
+
+    int trebleClefStart = 60;
+
     return CupertinoPageScaffold(
       navigationBar: CupertinoNavigationBar(
         middle: Text(widget.title),
@@ -107,6 +115,26 @@ class _MyHomePageState extends State<MyHomePage> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.start,
             children: <Widget>[
+              SizedBox(height: 20),
+              Text('Expected Note: $expectedNote'),
+              SizedBox(height: 20),
+              Text(
+                  'Last Pressed Note: ${(lastPressedNote != -1) ? lastPressedNote : '-'}'),
+              Stack(
+                alignment: Alignment.center,
+                children: [
+                  Image.asset(
+                    'assets/images/treble-clef.jpg',
+                  ),
+                  Positioned(
+                    top: 4 + (37.2 * 6.5),
+                    child: Padding(
+                        padding: const EdgeInsets.fromLTRB(16, 0, 0, 0),
+                        child: Image.asset('assets/images/whole-note.png')),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 20),
               const Text(
                 'List of MIDI devices:',
               ),
