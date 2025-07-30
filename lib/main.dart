@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_midi_command/flutter_midi_command.dart';
+import 'package:music_sheet_guide/deviceListPage.dart';
 import 'package:music_sheet_guide/midiDictionary.dart';
 import 'dart:math';
 
@@ -24,11 +25,12 @@ class MusicSheetGuideApp extends StatelessWidget {
             fontSize: 16,
             color: CupertinoColors.label,
           ),
-          navTitleTextStyle: TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-            color: CupertinoColors.label,
-          ),
+          navTitleTextStyle:
+              CupertinoTheme.of(context).textTheme.navTitleTextStyle.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: CupertinoColors.label,
+                    fontSize: 20,
+                  ),
         ),
       ),
       home: const MyHomePage(title: 'Music Sheet Guide - Note Guesser'),
@@ -46,8 +48,6 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  Future<List<MidiDevice>>? devices;
-
   int lastPressedNote = -1;
   bool lastPressedNoteCorrect = false;
   int expectedNote = begginerTrebleClefNotes[0];
@@ -61,13 +61,9 @@ class _MyHomePageState extends State<MyHomePage> {
 
     print('Initializing App...');
 
-    refreshDevices();
-
     MidiCommand().onMidiSetupChanged?.listen((event) {
       print('MIDI setup changed: ${event}');
     });
-
-    bool isConnected = false;
 
     MidiCommand().onMidiDataReceived?.listen((event) {
       if (event.data[0] == 254) {
@@ -119,12 +115,6 @@ class _MyHomePageState extends State<MyHomePage> {
     }
   }
 
-  void refreshDevices() {
-    setState(() {
-      devices = loadDevices();
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
     // TODO: not the best place to put, also should use LayoutBuilder
@@ -173,6 +163,16 @@ class _MyHomePageState extends State<MyHomePage> {
         middle: Text(
           widget.title,
           textAlign: TextAlign.center,
+        ),
+        trailing: CupertinoButton(
+          padding: EdgeInsets.zero,
+          onPressed: () {
+            Navigator.push(
+                context,
+                CupertinoPage(child: const DeviceListPage())
+                    .createRoute(context));
+          },
+          child: const Icon(CupertinoIcons.back),
         ),
       ),
       child: SafeArea(
@@ -229,108 +229,18 @@ class _MyHomePageState extends State<MyHomePage> {
                         ),
                       ],
                     ),
-                    const SizedBox(height: 20),
-                    const Text(
-                      'List of MIDI devices:',
-                    ),
-                    ListView(
-                      shrinkWrap: true,
-                      children: [
-                        FutureBuilder<List<MidiDevice>>(
-                          future: devices,
-                          builder: (context, snapshot) {
-                            if (snapshot.connectionState ==
-                                    ConnectionState.waiting ||
-                                snapshot.connectionState ==
-                                    ConnectionState.none) {
-                              return const CupertinoActivityIndicator();
-                            } else if (snapshot.hasError) {
-                              return Text('Error: ${snapshot.error}');
-                            } else if (!snapshot.hasData ||
-                                snapshot.data!.isEmpty) {
-                              return const Text(
-                                'No MIDI devices found.',
-                                textAlign: TextAlign.center,
-                              );
-                            } else {
-                              return Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                crossAxisAlignment: CrossAxisAlignment.center,
-                                children: snapshot.data!
-                                    .where((device) => !device.name
-                                        .toLowerCase()
-                                        .contains("network"))
-                                    .map((device) => Padding(
-                                          padding: const EdgeInsets.all(8.0),
-                                          child: Column(
-                                            children: [
-                                              Wrap(
-                                                  alignment:
-                                                      WrapAlignment.center,
-                                                  children: [
-                                                    Text(
-                                                      'Device: ${device.name}, ID: ${device.id}',
-                                                      textAlign:
-                                                          TextAlign.center,
-                                                      style: const TextStyle(
-                                                          fontSize: 16),
-                                                    ),
-                                                  ]),
-                                              const SizedBox(height: 8),
-                                              if (device.connected)
-                                                Text('Connected')
-                                              else
-                                                CupertinoButton.tinted(
-                                                  sizeStyle:
-                                                      CupertinoButtonSize.small,
-                                                  onPressed: () async {
-                                                    try {
-                                                      await MidiCommand()
-                                                          .connectToDevice(
-                                                              device);
-                                                      print(
-                                                          'Connected to ${device.name}');
-                                                    } catch (e) {
-                                                      print(
-                                                          'Error connecting to device: $e');
-                                                    }
-                                                    refreshDevices();
-                                                  },
-                                                  child: const Text('Connect'),
-                                                )
-                                            ],
-                                          ),
-                                        ))
-                                    .toList(),
-                              );
-                            }
-                          },
-                        ),
-                      ],
-                    ),
                   ],
                 ),
-                Column(
-                  children: [
-                    const SizedBox(height: 16),
-                    CupertinoButton.filled(
-                      sizeStyle: CupertinoButtonSize.small,
-                      onPressed: refreshDevices,
-                      child: const Text('Refresh Devices'),
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Text(
+                    'To use this app, make sure you have a MIDI device connected to your computer or mobile device. The app will automatically detect and list the available MIDI devices. You can then connect to a device by clicking the "Connect" button next to it.',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: CupertinoColors.systemGrey,
                     ),
-                    const SizedBox(height: 8),
-                    Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: Text(
-                        'To use this app, make sure you have a MIDI device connected to your computer or mobile device. The app will automatically detect and list the available MIDI devices. You can then connect to a device by clicking the "Connect" button next to it.',
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: CupertinoColors.systemGrey,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                    ),
-                  ],
+                    textAlign: TextAlign.center,
+                  ),
                 ),
               ],
             ),
