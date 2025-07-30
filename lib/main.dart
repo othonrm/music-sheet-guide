@@ -1,8 +1,8 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_midi_command/flutter_midi_command.dart';
-import 'package:music_sheet_guide/deviceListPage.dart';
-import 'package:music_sheet_guide/midiDictionary.dart';
+import 'package:music_sheet_guide/device_list_page.dart';
+import 'package:music_sheet_guide/midi_dictionary.dart';
 import 'dart:math';
 
 void main() {
